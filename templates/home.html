@@ -1,0 +1,18 @@
+{% extends "layout.html" %} {% block body %}
+<div class="row justify-content-md-center">
+    <div class="col-lg-4 col-md-6 col-sm-10">
+        <div class="card mt-3" style="background-color:rgb(231, 231, 231); border-color:rgb(207, 207, 207);">
+            <div class="card-body">
+                <form class="form" action="{{url_for('home')}}" method="POST">
+                    <div class="form-group">
+                        <label for="">Search Book:</label>
+                        <input type="text" name="book_search" id="" class="form-control mt-1" placeholder="Title, Author, or ISBN" aria-describedby="helpId">
+                        <button type="submit" class="btn btn-primary mt-3"> <i class="fa fa-search"></i> Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% block content %} {% endblock %}
+    </div>
+</div>
+{% endblock %}

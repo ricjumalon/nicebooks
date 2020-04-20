@@ -1,10 +1,12 @@
 import os
 import hashlib
+import json
 
-from flask import Flask, session, render_template, request, url_for, redirect
+from flask import Flask, session, render_template, request, url_for, redirect, flash
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from pip._vendor import requests
 
 app = Flask(__name__)
 
@@ -24,10 +26,9 @@ db = scoped_session(sessionmaker(bind=engine))
 @app.route("/", methods=['POST','GET'])
 def login():
 
-    #check if the user is already logged-in
+    #redirect to home if user is already logged-in
     if session.get('logged_in') == True:
-        #display books page
-        return redirect(url_for('books'))
+        return redirect(url_for('home'))
 
     #message to be display after login
     result_msg = None
@@ -61,7 +62,8 @@ def login():
             #set sessions data
             session['logged_in'] = True
             session['username'] = user.username
-            return render_template('index.html', result_msg = session['username'])
+            session['user_id'] = user.id
+            return redirect(url_for('home'))
             
     else:
         #else display login page
@@ -70,10 +72,10 @@ def login():
 
 @app.route("/register", methods=['POST','GET'])
 def register():
-    #check session if user is already logged-in
+    
+    #redirect to home if user is already logged-in
     if session.get('logged_in') == True:
-        #display books page
-        return redirect(url_for('books'))
+        return redirect(url_for('home'))
     
     #message to be display after registration
     result_msg = None
@@ -117,12 +119,73 @@ def register():
     else:
         return render_template('register.html', result_msg = result_msg)
 
-@app.route("/books")
-def books():
-
-    #check session if user is already logged-in
+@app.route("/home", methods=['POST','GET'])
+def home():
+    
+    #redirect to login page if user is not logged-in
     if session.get('logged_in') is None:
-        #display books page
         return redirect(url_for('login'))
+    
+    #get username session
     user = session.get('username')
-    return render_template('books.html', user = user)
+
+    #check if the search form is submitted
+    if request.method == 'POST':
+
+        search_text = request.form.get("book_search")
+        
+        books = db.execute("SELECT id, title, author, isbn FROM books WHERE title ILIKE :search_text OR author ILIKE :search_text OR isbn ILIKE :search_text",{"search_text": f"%{search_text}%"}).fetchall()
+        if books is None:
+            flash("Book not found!")
+            return render_template('books.html')
+
+        else:
+            flash(search_text)
+            return render_template('books.html', books=books)
+
+    return render_template('home.html')
+
+@app.route("/books/book_info/<int:book_id>")
+def book_info(book_id):
+
+    #redirect to login page if user is not logged-in
+    if session.get('logged_in') is None:
+        return redirect(url_for('login'))
+    
+    #Make sure book exist
+    book = db.execute("SELECT * FROM books WHERE id = :id",{"id": book_id}).fetchone()
+    if book is None:
+        result_msg = "Sorry, we can't find the book you're looking for!"
+        return render_template("book.html", result_msg = result_msg)
+
+    else:
+        #try to request data from goodreads api if available or connected to the internet
+        try:
+            #get book review data from goodreads api via json using the isbn
+            res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "zGsh7G5dOXmEP6NOfvGGA", "isbns": book.isbn}).json()
+            data = json.dumps(res)
+            data = json.loads(data)
+
+            #get rating count and average from the jsondata
+            r_count = data['books'][0]['work_ratings_count']
+            r_ave = data['books'][0]['average_rating']
+            return render_template('book.html', book = book, r_count = r_count, r_ave= r_ave)
+        except:
+            return render_template('book.html', book = book)
+
+    return redirect(url_for('home'))
+
+
+#@app.route("/add_review", methods=['POST','GET'])
+#def add_review():
+    
+    #if request.method == 'POST':
+
+
+
+@app.route("/logout")
+def logout():
+    
+    #clear sessions
+    session.clear()
+    return redirect(url_for('login'))

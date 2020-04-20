@@ -1,0 +1,53 @@
+{% extends "layout.html" %} {% block body %}
+<div class="row justify-content-md-center">
+    <div class="col-lg-4 col-md-6 col-sm-10">
+        {% if result_msg %}
+        <h3 class="mt-3">{{ result_msg }}</h3>
+        <a href="{{url_for('home')}}">Go back</a> {% else %}
+        <div class="alert alert-info mt-3" role="alert">
+            <h4>{{ book.title }}</h4>
+            <p>Author: <strong>{{ book.author }}</strong><br>Year Published: <strong>{{ book.year }}</strong><br>ISBN: <strong>{{ book.isbn }}</strong></p>
+            <hr>
+            <h5>Reviews from Goodreads</h5>
+            {% if r_ave %}
+            <p><strong>{{ r_ave }}/5</strong> avg rating <br> <strong>{{ r_count }}</strong> ratings</p>
+            {% else %}
+            <p> Ratings not available</p>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label for="">Submit a review:</label>
+            <hr>
+            <form action="" method="POST">
+                <div class="form-check form-check-inline justify-content-md-center">
+                    <div class="form-check">
+                        <label class="form-check-label">
+                        <input type="radio" class="form-check-input" name="star" id="" value="1">
+                        <i class="fa fa-star"></i>
+                    </label>
+                        <label class="form-check-label ml-4">
+                        <input type="radio" class="form-check-input" name="star" id="" value="1">
+                        <i class="fa fa-star"></i><i class="fa fa-star"></i>
+                    </label>
+                        <label class="form-check-label ml-4">
+                        <input type="radio" class="form-check-input" name="star" id="" value="1">
+                        <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                    </label>
+                        <label class="form-check-label ml-4">
+                        <input type="radio" class="form-check-input" name="star" id="" value="1">
+                        <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                    </label>
+                        <label class="form-check-label ml-4">
+                        <input type="radio" class="form-check-input" name="star" id="" value="1">
+                        <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+                    </label>
+                    </div>
+                </div>
+                <textarea class="form-control mt-3" name="" id="" rows="3" placeholder="Enter your review"></textarea>
+                <button type="submit" class="btn btn-primary mt-3">Submit Review</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
