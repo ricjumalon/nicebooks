@@ -163,7 +163,7 @@ def book_info(book_id):
 
     else:
         #get reviews from users
-        reviews = db.execute("SELECT users.name, reviews.rating, reviews.user_opinion, TO_CHAR(reviews.date_time, 'Mon dd, yyyy') as date_time FROM users RIGHT JOIN reviews ON users.id = reviews.user_id WHERE book_id = :book_id", {"book_id": book_id}).fetchall()
+        reviews = db.execute("SELECT users.name, reviews.rating, reviews.user_opinion, TO_CHAR(reviews.date_time, 'Mon dd, yyyy') as date FROM reviews LEFT JOIN users ON users.id = reviews.user_id WHERE book_id = :book_id ORDER BY date_time DESC", {"book_id": book_id}).fetchall()
 
         #check if user has already submitted review about the book
         if db.execute("SELECT id FROM reviews WHERE user_id = :user_id AND book_id = :book_id", {"user_id": session['user_id'], "book_id": book_id}).rowcount != 0:
@@ -221,8 +221,12 @@ def add_review():
 
                 #add review
                 db.execute("INSERT INTO reviews (user_id, book_id, rating, user_opinion, date_time) VALUES (:user_id, :book_id, :rating, :user_opinion, :date_time)", {"user_id": session['user_id'], "book_id": book_id, "rating": rating, "user_opinion": user_opinion, "date_time": date_now})
-
                 
+                #update review_count
+                db.execute("UPDATE books SET review_count = review_count + 1 WHERE id = :book_id", {"book_id": book_id})
+
+                #update average_rating
+                db.execute("UPDATE books SET average_rating = (SELECT ROUND(AVG(rating)) FROM reviews WHERE book_id = :book_id) WHERE id = :book_id", {"book_id": book_id})
 
                 db.commit()
                 return redirect(url_for('book_info',book_id=book_id))
@@ -233,6 +237,26 @@ def add_review():
 
     return redirect(url_for('home'))
 
+#book api: return a json response
+@app.route('/api/<isbn>')
+def api(isbn):
+
+    #add code here
+    book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
+    
+    if book is None:
+        return "404 Error: Book not Found!"
+    else:
+        json_data = {}
+        json_data['title'] = book.title
+        json_data['author'] = book.author
+        json_data['year'] = book.year
+        json_data['isbn'] = book.isbn
+        json_data['review_count'] = book.review_count
+        json_data['average_score'] = str(book.average_rating)
+        return json.dumps(json_data, indent=4)
+
+#logout
 @app.route("/logout")
 def logout():
     

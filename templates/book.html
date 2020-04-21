@@ -6,7 +6,13 @@
         <a href="{{url_for('home')}}">Go back</a> {% else %}
         <div class="alert alert-warning mt-3" role="alert">
             <h4>{{ book.title }}</h4>
-            <p>Author: <strong>{{ book.author }}</strong><br>Year Published: <strong>{{ book.year }}</strong><br>ISBN: <strong>{{ book.isbn }}</strong></p>
+            <p>
+                Author: <strong>{{ book.author }}</strong>
+                <br>Year Published: <strong>{{ book.year }}</strong>
+                <br>ISBN: <strong>{{ book.isbn }}</strong>
+                <br>Reviews: <strong>{{ book.average_rating }} out of 5 stars</strong>
+                <br><strong>{{ book.review_count }} reviews</strong>
+            </p>
             <hr>
             <h5>Reviews from Goodreads</h5>
             {% if r_ave %}
@@ -56,7 +62,7 @@
             <p><strong>{{ review.name }}</strong> rate this book {% for n in range(review.rating) %}
                 <i class="fa fa-star"></i> {% endfor %}
             </p>
-            <p>Last {{ review.date_time }}</p>
+            <p>Last {{ review.date }}</p>
             <hr>
             <p>{{ review.user_opinion }}</p>
         </div>
