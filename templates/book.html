@@ -4,7 +4,7 @@
         {% if result_msg %}
         <h3 class="mt-3">{{ result_msg }}</h3>
         <a href="{{url_for('home')}}">Go back</a> {% else %}
-        <div class="alert alert-info mt-3" role="alert">
+        <div class="alert alert-warning mt-3" role="alert">
             <h4>{{ book.title }}</h4>
             <p>Author: <strong>{{ book.author }}</strong><br>Year Published: <strong>{{ book.year }}</strong><br>ISBN: <strong>{{ book.isbn }}</strong></p>
             <hr>
@@ -15,39 +15,52 @@
             <p> Ratings not available</p>
             {% endif %}
         </div>
+        {% if has_reviewed == False%}
         <div class="form-group">
-            <label for="">Submit a review:</label>
+            <h4>Rate this book:</h4>
             <hr>
-            <form action="" method="POST">
+            <form action="{{ url_for('add_review')}}" method="POST">
+                <input type="hidden" name="book_id" value="{{book.id}}">
                 <div class="form-check form-check-inline justify-content-md-center">
                     <div class="form-check">
                         <label class="form-check-label">
                         <input type="radio" class="form-check-input" name="star" id="" value="1">
                         <i class="fa fa-star"></i>
                     </label>
-                        <label class="form-check-label ml-4">
-                        <input type="radio" class="form-check-input" name="star" id="" value="1">
+                        <label class="form-check-label ml-3">
+                        <input type="radio" class="form-check-input" name="star" id="" value="2">
                         <i class="fa fa-star"></i><i class="fa fa-star"></i>
                     </label>
-                        <label class="form-check-label ml-4">
-                        <input type="radio" class="form-check-input" name="star" id="" value="1">
+                        <label class="form-check-label ml-3">
+                        <input type="radio" class="form-check-input" name="star" id="" value="3">
                         <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
                     </label>
-                        <label class="form-check-label ml-4">
-                        <input type="radio" class="form-check-input" name="star" id="" value="1">
+                        <label class="form-check-label ml-3">
+                        <input type="radio" class="form-check-input" name="star" id="" value="4">
                         <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
                     </label>
-                        <label class="form-check-label ml-4">
-                        <input type="radio" class="form-check-input" name="star" id="" value="1">
+                        <label class="form-check-label ml-3">
+                        <input type="radio" class="form-check-input" name="star" id="" value="5">
                         <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
                     </label>
                     </div>
                 </div>
-                <textarea class="form-control mt-3" name="" id="" rows="3" placeholder="Enter your review"></textarea>
+                <textarea class="form-control mt-3" name="rating_text" id="" rows="3" placeholder="Say something about this book" required></textarea>
                 <button type="submit" class="btn btn-primary mt-3">Submit Review</button>
             </form>
         </div>
-        {% endif %}
+        {% endif %} {% if reviews %}
+        <h4>User Reviews</h4>
+        {% endif %} {% for review in reviews %}
+        <div class="alert alert-primary mt-3" role="alert">
+            <p><strong>{{ review.name }}</strong> rate this book {% for n in range(review.rating) %}
+                <i class="fa fa-star"></i> {% endfor %}
+            </p>
+            <p>Last {{ review.date_time }}</p>
+            <hr>
+            <p>{{ review.user_opinion }}</p>
+        </div>
+        {% endfor %} {% endif %}
     </div>
 </div>
 {% endblock %}

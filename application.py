@@ -1,6 +1,7 @@
 import os
 import hashlib
 import json
+import datetime
 
 from flask import Flask, session, render_template, request, url_for, redirect, flash
 from flask_session import Session
@@ -152,6 +153,8 @@ def book_info(book_id):
     if session.get('logged_in') is None:
         return redirect(url_for('login'))
     
+    has_reviewed = False;
+    
     #Make sure book exist
     book = db.execute("SELECT * FROM books WHERE id = :id",{"id": book_id}).fetchone()
     if book is None:
@@ -159,6 +162,13 @@ def book_info(book_id):
         return render_template("book.html", result_msg = result_msg)
 
     else:
+        #get reviews from users
+        reviews = db.execute("SELECT users.name, reviews.rating, reviews.user_opinion, TO_CHAR(reviews.date_time, 'Mon dd, yyyy') as date_time FROM users RIGHT JOIN reviews ON users.id = reviews.user_id WHERE book_id = :book_id", {"book_id": book_id}).fetchall()
+
+        #check if user has already submitted review about the book
+        if db.execute("SELECT id FROM reviews WHERE user_id = :user_id AND book_id = :book_id", {"user_id": session['user_id'], "book_id": book_id}).rowcount != 0:
+            has_reviewed = True;
+            
         #try to request data from goodreads api if available or connected to the internet
         try:
             #get book review data from goodreads api via json using the isbn
@@ -169,19 +179,59 @@ def book_info(book_id):
             #get rating count and average from the jsondata
             r_count = data['books'][0]['work_ratings_count']
             r_ave = data['books'][0]['average_rating']
-            return render_template('book.html', book = book, r_count = r_count, r_ave= r_ave)
+            return render_template('book.html', book = book, r_count = r_count, r_ave= r_ave, reviews = reviews, has_reviewed=has_reviewed)
         except:
-            return render_template('book.html', book = book)
+            return render_template('book.html', book = book, reviews = reviews, has_reviewed=has_reviewed)
 
     return redirect(url_for('home'))
 
 
-#@app.route("/add_review", methods=['POST','GET'])
-#def add_review():
+@app.route("/add_review", methods=['POST','GET'])
+def add_review():
     
-    #if request.method == 'POST':
+    if request.method == 'POST':
+        
+        book_id = request.form.get('book_id')
+        rating = request.form.get('star')
+        
+        #check if rating is valid (number) not a string
+        try:
+            valrating = int(rating)
+            #check if rating is more than 5 or less than 1
+            if 5 < valrating < 1:
+                result_msg = "Please select a rating from 1 - 5 only"
+                return redirect(url_for("book.html", result_msg = result_msg))
+        except ValueError:
+            result_msg = "Please enter a valid rating number : 1 - 5"
+            return redirect(url_for("book.html", result_msg = result_msg))
 
+        user_opinion = request.form.get('rating_text')
 
+        #Make sure book exist
+        result = db.execute("SELECT id FROM books WHERE id = :id",{"id": book_id}).fetchone()
+        if result is None:
+            result_msg = "Sorry, we can't find the book you're looking for!"
+            return redirect(url_for("book.html", result_msg = result_msg))
+        
+        else:
+            #check if the user has already submitted review about the book
+            if db.execute("SELECT id FROM reviews WHERE user_id = :user_id AND book_id = :book_id", {"user_id": session['user_id'], "book_id": book_id}).rowcount == 0:
+                
+                date_now = datetime.datetime.now()
+
+                #add review
+                db.execute("INSERT INTO reviews (user_id, book_id, rating, user_opinion, date_time) VALUES (:user_id, :book_id, :rating, :user_opinion, :date_time)", {"user_id": session['user_id'], "book_id": book_id, "rating": rating, "user_opinion": user_opinion, "date_time": date_now})
+
+                
+
+                db.commit()
+                return redirect(url_for('book_info',book_id=book_id))
+            else:
+                result_msg = "You can only submit 1 review in each book"
+                return redirect(url_for("book.html", result_msg = result_msg))
+            return redirect(url_for('book_info', book_id=book_id))
+
+    return redirect(url_for('home'))
 
 @app.route("/logout")
 def logout():

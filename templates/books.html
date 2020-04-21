@@ -1,5 +1,5 @@
 {% extends "home.html" %}{% block content %} {% for message in get_flashed_messages() %}
-<h5 class="mt-3">Searching for <span class='badge badge-info'>{{ message }}</span> : {{ books|length }} matche(s) found</h5>
+<h5 class="mt-3">Searching for <span class='badge badge-info'>{{ message }}</span> : {{ books|length }} book(s) found</h5>
 <hr> {% endfor %} {% for book in books %}
 <div class="alert alert-info" role="alert">
     <div class="row">
