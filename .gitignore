@@ -1,6 +1,0 @@
-#ignore the ff directories
-__pycache__/
-flask_session/
-venv/
-.vscode/
-nicebooks.sql
