@@ -225,8 +225,8 @@ def add_review():
                 #update review_count
                 db.execute("UPDATE books SET review_count = review_count + 1 WHERE id = :book_id", {"book_id": book_id})
 
-                #update average_rating
-                db.execute("UPDATE books SET average_rating = (SELECT ROUND(AVG(rating)) FROM reviews WHERE book_id = :book_id) WHERE id = :book_id", {"book_id": book_id})
+                #update average_rating with 2 decimal places
+                db.execute("UPDATE books SET average_rating = (SELECT ROUND(AVG(rating),2) FROM reviews WHERE book_id = :book_id) WHERE id = :book_id", {"book_id": book_id})
 
                 db.commit()
                 return redirect(url_for('book_info',book_id=book_id))
