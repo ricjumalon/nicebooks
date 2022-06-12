@@ -1,4 +1,4 @@
-# Project 1
+# Nicebooks
 
 Web Programming with Python and JavaScript
 
